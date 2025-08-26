@@ -12,7 +12,8 @@ estudiantes = [
     {"nombre": "Montserrat", "notas": [6.5, 6.9, 6.0]}, {"nombre": "Benjamín", "notas": [4.2, 5.0, 4.7]}
 ]
 
-#1 Calcular el promedio de notas de cada estudiante y determinar quién tiene el promedio más alto y más bajo
+# 1. Calcular el promedio de notas de cada estudiante y determinar quién tiene el promedio más alto y más bajo.
+# Aquí también resolvemos el item 5, entregando una lista ordenada de mayor a menor de los estudiantes según su promedio.
 
 for estudiante in estudiantes:
     promedio = sum(estudiante["notas"]) / len(estudiante["notas"])
@@ -47,3 +48,13 @@ else:
     print("Las notas más frecuentes son:")
     for nota_moda in modas:
         print(f"La nota {nota_moda} apareciendo {conteo_notas[nota_moda]} veces")
+
+# 4. Porcentaje de estudiantes con al menos una nota bajo 4.0
+total_estudiantes = len(estudiantes)
+estudiantes_con_rojos = [estudiante for estudiante in estudiantes if any(nota < 4.0 for nota in estudiante ["notas"])]
+
+cantidad_rojos = len(estudiantes_con_rojos)
+porcentaje_rojos = (cantidad_rojos / total_estudiantes) * 100
+
+print(f"Hay {cantidad_rojos} estudiantes con al menos una nota bajo 4.0")
+print(f"Equivalente a un {porcentaje_rojos:.2f}% del total")
