@@ -7,3 +7,15 @@ estudiantes = [
     {"nombre": "Paula", "notas": [6.3, 5.5, 6.1]}, {"nombre": "Andrés", "notas": [3.1, 2.7, 4.3]}, {"nombre": "Catalina", "notas": [5.9, 6.4, 5.7]}, {"nombre": "Rodrigo", "notas": [4.6, 3.9, 5.1]},
     {"nombre": "Francisca", "notas": [6.8, 7.0, 6.6]}, {"nombre": "Gabriel", "notas": [2.9, 3.5, 4.4]}, {"nombre": "Daniela", "notas": [5.4, 6.2, 5.8]}, {"nombre": "Vicente", "notas": [3.3, 4.1, 3.6]},
     {"nombre": "Montserrat", "notas": [6.5, 6.9, 6.0]}, {"nombre": "Benjamín", "notas": [4.2, 5.0, 4.7]}
+]
+for estudiante in estudiantes:
+    promedio = sum(estudiante["notas"]) / len(estudiante["notas"])
+    estudiante["promedio"] = round(promedio, 2)
+
+estudiantes.sort(key=lambda x: x["promedio"], reverse=True)
+promedio_mas_alto = estudiantes[0]
+promedio_mas_bajo = estudiantes[-1]
+for estudiante in estudiantes:
+    print(f"{estudiante['nombre']}: {estudiante['promedio']}")
+print("El promedio más alto de todos los estudiantes es:", promedio_mas_alto["promedio"], "y es de", promedio_mas_alto["nombre"])
+print("El promedio más bajo de todos los estudiantes es:", promedio_mas_bajo["promedio"], "y es de", promedio_mas_bajo["nombre"])
