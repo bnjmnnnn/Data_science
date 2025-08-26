@@ -19,3 +19,8 @@ for estudiante in estudiantes:
     print(f"{estudiante['nombre']}: {estudiante['promedio']}")
 print("El promedio más alto de todos los estudiantes es:", promedio_mas_alto["promedio"], "y es de", promedio_mas_alto["nombre"])
 print("El promedio más bajo de todos los estudiantes es:", promedio_mas_bajo["promedio"], "y es de", promedio_mas_bajo["nombre"])
+
+aprobados = [estudiante for estudiante in estudiantes if estudiante["promedio"] >= 4.0]
+print(f"Estudiantes aprobados: {len(aprobados)}")
+for estudiante in aprobados:
+    print(f"{estudiante['nombre']}: {estudiante['promedio']}")
