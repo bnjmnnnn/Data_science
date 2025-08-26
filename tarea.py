@@ -1,3 +1,6 @@
+from statistics import multimode
+from collections import Counter
+
 estudiantes = [
     {"nombre": "Ana", "notas": [6.5, 7.0, 5.8]}, {"nombre": "Pedro", "notas": [4.3, 5.1, 6.7]}, {"nombre": "María", "notas": [3.8, 4.9, 5.5]}, {"nombre": "Javier", "notas": [6.0, 6.4, 5.2]},
     {"nombre": "Camila", "notas": [5.7, 6.1, 4.8]}, {"nombre": "Felipe", "notas": [3.2, 2.9, 4.1]}, {"nombre": "Valentina", "notas": [6.8, 6.2, 6.5]}, {"nombre": "Cristóbal", "notas": [4.4, 5.9, 5.0]},
@@ -8,6 +11,9 @@ estudiantes = [
     {"nombre": "Francisca", "notas": [6.8, 7.0, 6.6]}, {"nombre": "Gabriel", "notas": [2.9, 3.5, 4.4]}, {"nombre": "Daniela", "notas": [5.4, 6.2, 5.8]}, {"nombre": "Vicente", "notas": [3.3, 4.1, 3.6]},
     {"nombre": "Montserrat", "notas": [6.5, 6.9, 6.0]}, {"nombre": "Benjamín", "notas": [4.2, 5.0, 4.7]}
 ]
+
+#1 Calcular el promedio de notas de cada estudiante y determinar quién tiene el promedio más alto y más bajo
+
 for estudiante in estudiantes:
     promedio = sum(estudiante["notas"]) / len(estudiante["notas"])
     estudiante["promedio"] = round(promedio, 2)
@@ -24,3 +30,20 @@ aprobados = [estudiante for estudiante in estudiantes if estudiante["promedio"] 
 print(f"Estudiantes aprobados: {len(aprobados)}")
 for estudiante in aprobados:
     print(f"{estudiante['nombre']}: {estudiante['promedio']}")
+
+# 3. Cuál es la nota más frecuente (moda) considerando todas las notas de todos los estudiantes
+
+todas_las_notas = [nota for estudiante in estudiantes for nota in estudiante["notas"]]
+
+conteo_notas = Counter(todas_las_notas)
+
+modas = multimode(todas_las_notas)
+
+# Si solo hay una nota como moda, la mostrará. en caso de haber empate, mostrará aquellas como la más frecuente
+if len(modas) == 1:
+    nota_moda = modas[0]
+    print(f"La nota más frecuente es {nota_moda} con {conteo_notas[nota_moda]} apariciones")
+else:
+    print("Las notas más frecuentes son:")
+    for nota_moda in modas:
+        print(f"La nota {nota_moda} apareciendo {conteo_notas[nota_moda]} veces")
