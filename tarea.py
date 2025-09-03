@@ -1,6 +1,7 @@
 from statistics import multimode
 from collections import Counter
 from datos import estudiantes
+
 # 1. Calcular el promedio de notas de cada estudiante y determinar quién tiene el promedio más alto y más bajo.
 # Aquí también resolvemos el item 5, entregando una lista ordenada de mayor a menor de los estudiantes según su promedio.
 

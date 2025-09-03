@@ -30,5 +30,13 @@ todas_las_notas = df_estudiantes["notas"].explode()
 moda_notas = todas_las_notas.mode()
 print(f"La(s) nota(s) más frecuente(s): {list(moda_notas)}")
 
-#Gráficas los datos te muestra que tan dispersos están algunos datos lo que te puede indicar cuáles son los datos sucios, usar seaborn cuando utilizamos pandas
-#Utilizar EDA para verificar que los datos están limpios
+# 4. Porcentaje de estudiantes con al menos una nota bajo 4.0
+estudiantes_con_bajo4 = df_estudiantes[df_estudiantes["notas"].apply(lambda x: any(nota < 3.95 for nota in x))]
+porcentaje_bajo4 = (len(estudiantes_con_bajo4) / len(df_estudiantes)) * 100
+print(f"Porcentaje de estudiantes con al menos 1 nota < 4.0: {porcentaje_bajo4:.2f}%")
+
+# 5. Ordenar los promedios de mayor a menor
+df_ordenado = df_estudiantes.sort_values("promedio", ascending=False).copy()
+df_ordenado["promedio"] = df_ordenado["promedio"].round(2)
+print("Estudiantes ordenados por promedio (mayor a menor):")
+print(df_ordenado[["nombre", "promedio"]])
