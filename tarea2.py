@@ -36,10 +36,10 @@ porcentaje_bajo4 = (len(estudiantes_con_bajo4) / len(df_estudiantes)) * 100
 print(f"Porcentaje de estudiantes con al menos 1 nota < 4.0: {porcentaje_bajo4:.2f}%")
 
 # 5. Ordenar los promedios de mayor a menor
-df_ordenados = df_estudiantes.sort_values("promedio", ascending=False).copy()
-df_ordenados["promedio"] = df_ordenados["promedio"].round(2)
+df_ordenado = df_estudiantes.sort_values("promedio", ascending=False).copy()
+df_ordenado["promedio"] = df_ordenado["promedio"].round(2)
 print("Estudiantes ordenados por promedio (mayor a menor):")
-print(df_ordenados[["nombre", "promedio"]])
+print(df_ordenado[["nombre", "promedio"]])
 
 #Gráficas los datos te muestra que tan dispersos están algunos datos lo que te puede indicar cuáles son los datos sucios, usar seaborn cuando utilizamos pandas
 #Utilizar EDA para verificar que los datos están limpios
