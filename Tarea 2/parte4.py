@@ -14,6 +14,9 @@ df_estudiantes = pd.DataFrame(estudiantes_limpios)
 df_estudiantes["promedio"] = df_estudiantes["notas"].apply(np.mean)
 
 # 4. Porcentaje de estudiantes con al menos una nota bajo 4.0
+#mascara_notas = df_estudiantes["notas"] < 3.95
+#estudiantes_bajo_4 = df_estudiantes.loc[mascara_notas, "nombre"].unique()
+#porcentaje = (len(estudiantes_bajo_4) / len(df_estudiantes)) * 100
 estudiantes_con_bajo4 = df_estudiantes[df_estudiantes["notas"].apply(lambda x: any(nota < 3.95 for nota in x))]
 porcentaje_bajo4 = (len(estudiantes_con_bajo4) / len(df_estudiantes)) * 100
 print(f"Porcentaje de estudiantes con al menos 1 nota < 4.0: {porcentaje_bajo4:.2f}%")
