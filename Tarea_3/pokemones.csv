@@ -1,6 +1,6 @@
 Nombre,Tipo 1,Tipo 2,Ataque,Defensa,Velocidad,PS
 Bulbasaur,Planta,Veneno,49,49,45,45
-Ivysaur,Planta,Veneno,62,63,60,60
+Ivysaur,Planta,Veneno,"62",63,60,60
 Venusaur,Planta,Veneno,82,83,80,80
 Charmander,Fuego,,52,43,65,39
 Charmeleon,Fuego,,64,58,80,58

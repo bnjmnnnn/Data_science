@@ -1,313 +1,160 @@
 import polars as pl
+import requests
 
-def limpiar_datos_pokemon(ruta_archivo):
+def obtener_pokemon_gen1():
+    """Obtiene lista de Pokémon Gen 1 desde PokéAPI o usa lista básica"""
+    try:
+        response = requests.get("https://pokeapi.co/api/v2/generation/1/", timeout=5)
+        pokemon_data = response.json()['pokemon_species']
+        nombres = {p['name'].replace('-', ' ').title() for p in pokemon_data}
+        
+        # Casos especiales
+        if 'Mr Mime' in nombres:
+            nombres.remove('Mr Mime')
+            nombres.add('Mr. Mime')
+        if 'Farfetchd' in nombres:
+            nombres.remove('Farfetchd')
+            nombres.add("Farfetch'd")
+            
+        print(f"✅ {len(nombres)} Pokémon Gen 1 obtenidos desde PokéAPI")
+        return nombres
+    except:
+        print("⚠️ Sin conexión - usando validación básica")
+        return {'Bulbasaur', 'Charmander', 'Squirtle', 'Pikachu', 'Mewtwo'}
+
+def limpiar_datos_pokemon(archivo_csv):
     """
-    Limpia y valida datos de Pokémon de primera generación
+    Limpia datos Pokémon: corrige tipos y valida datos
     """
     
-    # Leer el archivo CSV
+    # 1. LEER ARCHIVO
     try:
-        df = pl.read_csv(ruta_archivo)
-        print(f"✅ Archivo leído exitosamente: {df.shape[0]} filas, {df.shape[1]} columnas")
-        print(f"Columnas encontradas: {df.columns}")
+        df = pl.read_csv(archivo_csv)
+        print(f"📁 Archivo leído: {df.shape[0]} filas, {df.shape[1]} columnas")
     except Exception as e:
-        print(f"❌ Error al leer el archivo: {e}")
+        print(f"❌ Error: {e}")
         return None
     
-    print("\n" + "="*60)
-    print("ANÁLISIS INICIAL DE DATOS")
-    print("="*60)
-    
-    # Mostrar información básica
-    print(df.describe())
-    print(f"\nPrimeras 5 filas:")
-    print(df.head())
-    
-    # Pokémon válidos de primera generación (1-151)
-    pokemon_gen1 = {
-        'Bulbasaur', 'Ivysaur', 'Venusaur', 'Charmander', 'Charmeleon', 'Charizard',
-        'Squirtle', 'Wartortle', 'Blastoise', 'Caterpie', 'Metapod', 'Butterfree',
-        'Weedle', 'Kakuna', 'Beedrill', 'Pidgey', 'Pidgeotto', 'Pidgeot',
-        'Rattata', 'Raticate', 'Spearow', 'Fearow', 'Ekans', 'Arbok',
-        'Pikachu', 'Raichu', 'Sandshrew', 'Sandslash', 'Nidoran♀', 'Nidorina',
-        'Nidoqueen', 'Nidoran♂', 'Nidorino', 'Nidoking', 'Clefairy', 'Clefable',
-        'Vulpix', 'Ninetales', 'Jigglypuff', 'Wigglytuff', 'Zubat', 'Golbat',
-        'Oddish', 'Gloom', 'Vileplume', 'Paras', 'Parasect', 'Venonat',
-        'Venomoth', 'Diglett', 'Dugtrio', 'Meowth', 'Persian', 'Psyduck',
-        'Golduck', 'Mankey', 'Primeape', 'Growlithe', 'Arcanine', 'Poliwag',
-        'Poliwhirl', 'Poliwrath', 'Abra', 'Kadabra', 'Alakazam', 'Machop',
-        'Machoke', 'Machamp', 'Bellsprout', 'Weepinbell', 'Victreebel', 'Tentacool',
-        'Tentacruel', 'Geodude', 'Graveler', 'Golem', 'Ponyta', 'Rapidash',
-        'Slowpoke', 'Slowbro', 'Magnemite', 'Magneton', 'Farfetch\'d', 'Doduo',
-        'Dodrio', 'Seel', 'Dewgong', 'Grimer', 'Muk', 'Shellder',
-        'Cloyster', 'Gastly', 'Haunter', 'Gengar', 'Onix', 'Drowzee',
-        'Hypno', 'Krabby', 'Kingler', 'Voltorb', 'Electrode', 'Exeggcute',
-        'Exeggutor', 'Cubone', 'Marowak', 'Hitmonlee', 'Hitmonchan', 'Lickitung',
-        'Koffing', 'Weezing', 'Rhyhorn', 'Rhydon', 'Chansey', 'Tangela',
-        'Kangaskhan', 'Horsea', 'Seadra', 'Goldeen', 'Seaking', 'Staryu',
-        'Starmie', 'Mr. Mime', 'Scyther', 'Jynx', 'Electabuzz', 'Magmar',
-        'Pinsir', 'Tauros', 'Magikarp', 'Gyarados', 'Lapras', 'Ditto',
-        'Eevee', 'Vaporeon', 'Jolteon', 'Flareon', 'Porygon', 'Omanyte',
-        'Omastar', 'Kabuto', 'Kabutops', 'Aerodactyl', 'Snorlax', 'Articuno',
-        'Zapdos', 'Moltres', 'Dratini', 'Dragonair', 'Dragonite', 'Mewtwo', 'Mew'
+    # 2. IDENTIFICAR COLUMNAS
+    cols = {
+        'nombre': next((c for c in df.columns if 'nombre' in c.lower()), None),
+        'tipo1': next((c for c in df.columns if 'tipo' in c.lower() and '1' in c), None),
+        'tipo2': next((c for c in df.columns if 'tipo' in c.lower() and '2' in c), None),
+        'ataque': next((c for c in df.columns if 'ataque' in c.lower()), None),
+        'defensa': next((c for c in df.columns if 'defensa' in c.lower()), None),
+        'velocidad': next((c for c in df.columns if 'velocidad' in c.lower()), None),
+        'hp': next((c for c in df.columns if any(x in c.lower() for x in ['ps', 'hp', 'vida'])), None)
     }
     
-    # ❌ SOLO TIPOS DE GEN 1 - NO INCLUYE HADA/FAIRY
-    tipos_validos = {
-        'Normal', 'Fuego', 'Agua', 'Eléctrico', 'Planta', 'Hielo', 'Lucha',
-        'Veneno', 'Tierra', 'Volador', 'Psiquico', 'Bicho', 'Roca', 'Fantasma', 'Dragón',
-        # También en inglés por si acaso
-        'Fire', 'Water', 'Electric', 'Grass', 'Ice', 'Fighting',
-        'Poison', 'Ground', 'Flying', 'Psychic', 'Bug', 'Rock', 'Ghost', 'Dragon'
-    }
+    print("🔍 Columnas encontradas:")
+    for nombre, col in cols.items():
+        print(f"  {nombre}: {col}")
     
-    print("\n" + "="*60)
-    print("DETECCIÓN DE PROBLEMAS")
-    print("="*60)
+    # 3. OBTENER POKÉMON VÁLIDOS
+    pokemon_validos = obtener_pokemon_gen1()
     
-    problemas_encontrados = []
+    # 4. APLICAR CORRECCIONES
+    df_limpio = df.clone()
+    cambios = []
     
-    # ✅ DETECCIÓN DE COLUMNAS CORREGIDA - Mapeo directo por nombre exacto
-    col_nombre = 'Nombre' if 'Nombre' in df.columns else None
-    col_tipo1 = 'Tipo 1' if 'Tipo 1' in df.columns else None
-    col_tipo2 = 'Tipo 2' if 'Tipo 2' in df.columns else None
-    col_ataque = 'Ataque' if 'Ataque' in df.columns else None
-    col_defensa = 'Defensa' if 'Defensa' in df.columns else None
-    col_velocidad = 'Velocidad' if 'Velocidad' in df.columns else None
-    col_hp = 'PS' if 'PS' in df.columns else None
+    # Corregir Tipo 1: Hada/Fairy → Normal
+    if cols['tipo1']:
+        antes = df_limpio.filter(pl.col(cols['tipo1']).is_in(['Hada', 'Fairy'])).height
+        if antes > 0:
+            df_limpio = df_limpio.with_columns(
+                pl.when(pl.col(cols['tipo1']).is_in(['Hada', 'Fairy']))
+                .then(pl.lit('Normal'))
+                .otherwise(pl.col(cols['tipo1']))
+                .alias(cols['tipo1'])
+            )
+            cambios.append(f"🔧 {antes} tipos Hada/Fairy → Normal")
     
-    print(f"Columnas identificadas:")
-    print(f"  Nombre: {col_nombre}")
-    print(f"  Tipo 1: {col_tipo1}")
-    print(f"  Tipo 2: {col_tipo2}")
-    print(f"  Ataque: {col_ataque}")
-    print(f"  Defensa: {col_defensa}")
-    print(f"  Velocidad: {col_velocidad}")
-    print(f"  HP/PS: {col_hp}")
+    # Corregir Tipo 2: eliminar Acero/Steel y Hada/Fairy
+    if cols['tipo2']:
+        antes = df_limpio.filter(pl.col(cols['tipo2']).is_in(['Acero', 'Steel', 'Hada', 'Fairy'])).height
+        if antes > 0:
+            df_limpio = df_limpio.with_columns(
+                pl.when(pl.col(cols['tipo2']).is_in(['Acero', 'Steel', 'Hada', 'Fairy']))
+                .then(pl.lit(""))
+                .otherwise(pl.col(cols['tipo2']))
+                .alias(cols['tipo2'])
+            )
+            cambios.append(f"🔧 {antes} tipos secundarios no válidos eliminados")
     
-    # 1. Valores nulos o vacíos
-    if col_nombre:
-        nulos_nombre = df.filter(pl.col(col_nombre).is_null() | (pl.col(col_nombre) == "")).height
-        if nulos_nombre > 0:
-            problemas_encontrados.append(f"❌ {nulos_nombre} filas con nombres nulos o vacíos")
-            print(f"❌ {nulos_nombre} filas con nombres nulos o vacíos")
+    # Convertir estadísticas a números
+    stats_cols = ['ataque', 'defensa', 'velocidad', 'hp']
+    for stat in stats_cols:
+        col = cols[stat]
+        if col and df_limpio[col].dtype not in [pl.Int32, pl.Int64, pl.Float32, pl.Float64]:
+            try:
+                valores_antes = df_limpio.filter(pl.col(col).is_not_null()).height
+                df_limpio = df_limpio.with_columns(
+                    pl.col(col).cast(pl.Float64, strict=False).alias(col)
+                )
+                valores_despues = df_limpio.filter(pl.col(col).is_not_null()).height
+                perdidos = valores_antes - valores_despues
+                if perdidos > 0:
+                    cambios.append(f"🔧 {perdidos} valores no numéricos en {stat} → null")
+                else:
+                    cambios.append(f"✅ {stat} convertido a numérico")
+            except:
+                cambios.append(f"❌ No se pudo convertir {stat}")
     
-    # 2. Validar nombres de Pokémon de Gen 1
-    if col_nombre:
-        df_validacion = df.with_columns([
-            pl.col(col_nombre).is_in(pokemon_gen1).alias("pokemon_valido")
-        ])
-        nombres_invalidos = df_validacion.filter(~pl.col("pokemon_valido"))
-        if nombres_invalidos.height > 0:
-            problemas_encontrados.append(f"❌ {nombres_invalidos.height} Pokémon no válidos de Gen 1")
-            print(f"❌ {nombres_invalidos.height} Pokémon no válidos de Gen 1:")
-            print(nombres_invalidos.select([col_nombre]).unique())
+    # Eliminar duplicados
+    if cols['nombre']:
+        antes_dup = df_limpio.shape[0]
+        df_limpio = df_limpio.unique(subset=[cols['nombre']], keep="first")
+        despues_dup = df_limpio.shape[0]
+        if antes_dup != despues_dup:
+            cambios.append(f"🔧 {antes_dup - despues_dup} duplicados eliminados")
     
-    # 3. Validar tipos - AQUÍ SE VA A DETECTAR HADA COMO INVÁLIDO
-    if col_tipo1:
-        tipos_unicos1 = df.filter(pl.col(col_tipo1).is_not_null()).select(pl.col(col_tipo1).unique()).to_series().to_list()
-        print(f"\n🔍 Tipos primarios encontrados en tu archivo: {tipos_unicos1}")
-        
-        tipos_invalidos1 = df.filter(
-            ~pl.col(col_tipo1).is_in(tipos_validos) & 
-            pl.col(col_tipo1).is_not_null()
-        )
-        
-        if tipos_invalidos1.height > 0:
-            tipos_malos = tipos_invalidos1.select(pl.col(col_tipo1).unique()).to_series().to_list()
-            problemas_encontrados.append(f"❌ {tipos_invalidos1.height} filas con tipos primarios inválidos")
-            print(f"❌ {tipos_invalidos1.height} filas con tipos primarios inválidos")
-            print(f"   Tipos inválidos encontrados: {tipos_malos}")
-            
-            # Mostrar qué Pokémon tienen estos tipos inválidos
-            if col_nombre:
-                pokemon_con_tipos_malos = tipos_invalidos1.select([col_nombre, col_tipo1]).unique()
-                print(f"   Pokémon afectados:")
-                print(pokemon_con_tipos_malos)
-    else:
-        print("⚠️ No se pudo detectar la columna 'Tipo 1'")
+    # 5. VALIDACIONES RÁPIDAS
+    problemas = []
     
-    if col_tipo2:
-        tipos_unicos2 = df.filter(pl.col(col_tipo2).is_not_null() & (pl.col(col_tipo2) != "")).select(pl.col(col_tipo2).unique()).to_series().to_list()
-        print(f"🔍 Tipos secundarios encontrados en tu archivo: {tipos_unicos2}")
-        
-        tipos_invalidos2 = df.filter(
-            ~pl.col(col_tipo2).is_in(tipos_validos) & 
-            pl.col(col_tipo2).is_not_null() & 
-            (pl.col(col_tipo2) != "")
-        )
-        
-        if tipos_invalidos2.height > 0:
-            tipos_malos2 = tipos_invalidos2.select(pl.col(col_tipo2).unique()).to_series().to_list()
-            problemas_encontrados.append(f"❌ {tipos_invalidos2.height} filas con tipos secundarios inválidos")
-            print(f"❌ {tipos_invalidos2.height} filas con tipos secundarios inválidos")
-            print(f"   Tipos inválidos encontrados: {tipos_malos2}")
-    else:
-        print("⚠️ No se pudo detectar la columna 'Tipo 2'")
+    # Nombres
+    if cols['nombre'] and len(pokemon_validos) > 10:  # Solo si tenemos lista completa
+        invalidos = df_limpio.filter(~pl.col(cols['nombre']).is_in(pokemon_validos)).height
+        if invalidos > 0:
+            problemas.append(f"⚠️ {invalidos} nombres no son de Gen 1")
     
-    # 4. Validar estadísticas
-    columnas_stats = [
-        (col_ataque, "Ataque", 1, 255),
-        (col_defensa, "Defensa", 1, 255),
-        (col_velocidad, "Velocidad", 1, 255),
-        (col_hp, "HP/PS", 1, 255)
-    ]
-    
-    for col, nombre, min_val, max_val in columnas_stats:
+    # Nulos en estadísticas
+    for stat in stats_cols:
+        col = cols[stat]
         if col:
-            # Valores nulos
-            nulos = df.filter(pl.col(col).is_null()).height
+            nulos = df_limpio.filter(pl.col(col).is_null()).height
             if nulos > 0:
-                problemas_encontrados.append(f"❌ {nulos} valores nulos en {nombre}")
-                print(f"❌ {nulos} valores nulos en {nombre}")
-            
-            # Valores fuera de rango
-            fuera_rango = df.filter(
-                (pl.col(col) < min_val) | (pl.col(col) > max_val)
-            ).height
-            if fuera_rango > 0:
-                problemas_encontrados.append(f"❌ {fuera_rango} valores de {nombre} fuera del rango ({min_val}-{max_val})")
-                print(f"❌ {fuera_rango} valores de {nombre} fuera del rango ({min_val}-{max_val})")
+                problemas.append(f"⚠️ {nulos} valores nulos en {stat}")
     
-    # 5. Duplicados
-    if col_nombre:
-        duplicados = df.group_by(col_nombre).len().filter(pl.col("len") > 1)
-        if duplicados.height > 0:
-            problemas_encontrados.append(f"❌ {duplicados.height} Pokémon duplicados")
-            print(f"❌ {duplicados.height} Pokémon duplicados:")
-            print(duplicados)
+    # 6. GUARDAR Y REPORTAR
+    archivo_salida = archivo_csv.replace('.csv', '_limpio.csv')
+    df_limpio.write_csv(archivo_salida)
     
-    print("\n" + "="*60)
-    print("RESUMEN DE LIMPIEZA")
-    print("="*60)
+    print(f"\n📊 RESUMEN:")
+    print(f"  Original: {df.shape[0]} filas → Limpio: {df_limpio.shape[0]} filas")
     
-    if not problemas_encontrados:
-        print("✅ ¡Perfecto! No se encontraron problemas en los datos.")
-        return df
-    else:
-        print(f"Se encontraron {len(problemas_encontrados)} tipos de problemas:")
-        for problema in problemas_encontrados:
+    if cambios:
+        print(f"\n✅ CAMBIOS APLICADOS:")
+        for cambio in cambios:
+            print(f"  {cambio}")
+    
+    if problemas:
+        print(f"\n⚠️ PROBLEMAS DETECTADOS:")
+        for problema in problemas:
             print(f"  {problema}")
     
-    # Crear DataFrame limpio ELIMINANDO TIPOS INVÁLIDOS
-    print("\n🧹 Creando dataset limpio (ELIMINANDO tipos Hada/Fairy)...")
+    print(f"\n💾 Guardado en: {archivo_salida}")
+    print(f"\n📋 MUESTRA DEL RESULTADO:")
+    print(df_limpio.head())
     
-    condiciones_limpieza = []
-    
-    if col_nombre:
-        condiciones_limpieza.append(pl.col(col_nombre).is_not_null())
-        condiciones_limpieza.append(pl.col(col_nombre) != "")
-        condiciones_limpieza.append(pl.col(col_nombre).is_in(pokemon_gen1))
-    
-    # ESTA ES LA PARTE CRÍTICA - ELIMINA FILAS CON TIPOS INVÁLIDOS
-    if col_tipo1:
-        condiciones_limpieza.append(pl.col(col_tipo1).is_in(tipos_validos))
-    
-    if col_tipo2:
-        # Para tipo2, permitir nulos o vacíos, pero si tiene valor debe ser válido
-        condiciones_limpieza.append(
-            (pl.col(col_tipo2).is_null()) | 
-            (pl.col(col_tipo2) == "") | 
-            (pl.col(col_tipo2).is_in(tipos_validos))
-        )
-    
-    # Aplicar filtros
-    if condiciones_limpieza:
-        # 🔍 IDENTIFICAR QUÉ FILAS SE VAN A ELIMINAR ANTES DE HACERLO
-        filas_validas = pl.all_horizontal(condiciones_limpieza)
-        df_limpio = df.filter(filas_validas)
-        df_eliminadas = df.filter(~filas_validas)  # ← Las que NO cumplen las condiciones
-        
-        # Remover duplicados
-        duplicados_eliminados = None
-        if col_nombre:
-            # Identificar duplicados antes de eliminar
-            antes_duplicados = df_limpio.shape[0]
-            duplicados_encontrados = df_limpio.group_by(col_nombre).len().filter(pl.col("len") > 1)
-            if duplicados_encontrados.height > 0:
-                print(f"\n🔍 Duplicados que se van a eliminar:")
-                print(duplicados_encontrados)
-                # Guardar los duplicados que se eliminan
-                duplicados_eliminados = df_limpio.group_by(col_nombre).tail(n=-1)  # Todos excepto el primero
-                
-            df_limpio = df_limpio.unique(subset=[col_nombre], keep="first")
-            despues_duplicados = df_limpio.shape[0]
-            duplicados_removidos = antes_duplicados - despues_duplicados
-        
-        filas_eliminadas_total = df.shape[0] - df_limpio.shape[0]
-        print(f"✅ Dataset limpio creado: {df_limpio.shape[0]} filas")
-        print(f"🗑️ TOTAL ELIMINADAS: {filas_eliminadas_total} filas")
-        
-        # 📋 MOSTRAR DETALLES DE LO QUE SE ELIMINÓ
-        if df_eliminadas.height > 0:
-            print(f"\n📋 DETALLES DE LAS {df_eliminadas.height} FILAS ELIMINADAS POR DATOS INVÁLIDOS:")
-            
-            if col_nombre and col_tipo1:
-                eliminadas_detalle = df_eliminadas.select([col_nombre, col_tipo1, col_tipo2] if col_tipo2 else [col_nombre, col_tipo1])
-                print(eliminadas_detalle)
-                
-                # Agrupar por razón de eliminación
-                print(f"\n🔍 RAZONES DE ELIMINACIÓN:")
-                
-                # Pokémon no válidos
-                pokemon_invalidos = df_eliminadas.filter(~pl.col(col_nombre).is_in(pokemon_gen1))
-                if pokemon_invalidos.height > 0:
-                    print(f"  • {pokemon_invalidos.height} Pokémon no válidos de Gen 1:")
-                    print(f"    {pokemon_invalidos.select(col_nombre).unique().to_series().to_list()}")
-                
-                # Tipos inválidos
-                if col_tipo1:
-                    tipos1_invalidos = df_eliminadas.filter(~pl.col(col_tipo1).is_in(tipos_validos))
-                    if tipos1_invalidos.height > 0:
-                        tipos_malos_eliminados = tipos1_invalidos.select(pl.col(col_tipo1).unique()).to_series().to_list()
-                        print(f"  • {tipos1_invalidos.height} filas con Tipo 1 inválido: {tipos_malos_eliminados}")
-                        
-                        # Mostrar qué Pokémon específicos
-                        pokemon_tipo1_malo = tipos1_invalidos.select([col_nombre, col_tipo1]).unique()
-                        print(f"    Pokémon afectados:")
-                        for row in pokemon_tipo1_malo.iter_rows():
-                            print(f"      - {row[0]}: {row[1]}")
-                
-                if col_tipo2:
-                    tipos2_invalidos = df_eliminadas.filter(
-                        ~pl.col(col_tipo2).is_in(tipos_validos) & 
-                        pl.col(col_tipo2).is_not_null() & 
-                        (pl.col(col_tipo2) != "")
-                    )
-                    if tipos2_invalidos.height > 0:
-                        tipos_malos2_eliminados = tipos2_invalidos.select(pl.col(col_tipo2).unique()).to_series().to_list()
-                        print(f"  • {tipos2_invalidos.height} filas con Tipo 2 inválido: {tipos_malos2_eliminados}")
-        
-        # Mostrar duplicados eliminados
-        if col_nombre and duplicados_removidos > 0:
-            print(f"\n📋 DUPLICADOS ELIMINADOS: {duplicados_removidos} filas")
-            if duplicados_eliminados is not None and duplicados_eliminados.height > 0:
-                print("  Pokémon duplicados eliminados:")
-                print(duplicados_eliminados.select([col_nombre]))
-        
-        # Guardar dataset limpio
-        ruta_salida = ruta_archivo.replace('.csv', '_limpio.csv')
-        df_limpio.write_csv(ruta_salida)
-        print(f"\n💾 Dataset limpio guardado en: {ruta_salida}")
-        
-        # 💾 GUARDAR TAMBIÉN LAS FILAS ELIMINADAS PARA REVISIÓN
-        if df_eliminadas.height > 0:
-            ruta_eliminadas = ruta_archivo.replace('.csv', '_eliminadas.csv')
-            df_eliminadas.write_csv(ruta_eliminadas)
-            print(f"🗑️ Filas eliminadas guardadas en: {ruta_eliminadas}")
-        
-        return df_limpio
-    else:
-        print("⚠️ No se pudieron aplicar filtros de limpieza")
-        return df
+    return df_limpio
 
-# Uso del código
+# USO
 if __name__ == "__main__":
-    # CAMBIA ESTA RUTA POR LA DE TU ARCHIVO
-    ruta_archivo = r"c:\Users\benja\OneDrive\Documentos\GitHub\Data_science\Tarea_3\pokemones.csv"
+    archivo = r"c:\Users\benja\OneDrive\Documentos\GitHub\Data_science\Tarea_3\pokemones.csv"
     
-    df_limpio = limpiar_datos_pokemon(ruta_archivo)
-    
-    if df_limpio is not None:
-        print("\n🎉 ¡Proceso de limpieza completado!")
-        print(f"Dimensiones finales: {df_limpio.shape}")
+    try:
+        import requests
+        resultado = limpiar_datos_pokemon(archivo)
+        print("\n🎉 ¡Completado!" if resultado is not None else "\n❌ Falló")
+    except ImportError:
+        print("❌ Instala requests: pip install requests")
