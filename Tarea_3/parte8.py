@@ -1,5 +1,4 @@
 #Interpreta los resultados de los gráficos y estadísticas: ¿qué conclusiones puedes sacar sobre los Pokémon de la primera generación?
-#Qué tipo de Pokémon sería "más balanceado" según las estadísticas? ¿Y el más especializado?
 
 #1.Histograma del ataque
 #Se observa que la mayoría de los Pokémon tienen ataques en el rango 40 a 90, lo que indica que estos valores son los más comunes.
@@ -25,4 +24,13 @@
 #Rhydon (Tierra) con 130 es un outlier superior 
 # PS (puntos de salud):
 # Chansey (Normal) con 250 y Snorlax (Normal) con 160 son outliers muy altos, que superan ampliamente al promedio de su tipo.
+
+#Qué tipo de Pokémon sería "más balanceado" según las estadísticas? ¿Y el más especializado?
+#En los tipos balanceados tenemos al tipo Normal/Agua, ya que si bien hay pokemones que tienen valores altos en su mayoria 
+#tienen sus estádisticas en rangos medios
+#En el tipo más especializado seria por el lado de la defensa y el ataque tenemos al tipo Tierra/Roca
+#Por el lado de el ataque solamente el tipo Lucha
+#En velocidad el tipo eléctrico
+#Por el lado de los PS suelen ser el tipo Normal
+
 
