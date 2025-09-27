@@ -36,4 +36,5 @@ print(f'🎯 RMSE: {rmse:.2f}')
 print(f'   → En promedio, las predicciones se desvían en {rmse:.2f} goles del resultado real')
 
 print(f'\n📈 R²: {r2:.2f} ({r2:.0%})')
+print(f'   → El modelo explica el {r2:.0%} de la variabilidad en los goles marcados')
 
