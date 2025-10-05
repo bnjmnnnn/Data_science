@@ -26,7 +26,7 @@ r2 = r2_score(Y_test, Y_pred)
 
 print(f'\n RESULTADOS DE LA EVALUACIÓN - PREDICCIÓN DE EL PRECIO UF\n')
 print(f'RMSE: {rmse:.2f}')
-print(f'   → En promedio, las predicciones se desvían en {rmse:.2f} goles del resultado real')
+print(f'   → En promedio, las predicciones se desvían en {rmse:.2f} UF del resultado real')
 
-print(f'\n📈 R²: {r2:.2f} ({r2:.0%})')
-print(f'   → El modelo explica el {r2:.0%} de la variabilidad en los goles marcados')
+print(f'\nR²: {r2:.2f} ({r2:.0%})')
+print(f'   → El modelo explica el {r2:.0%} de la variabilidad en el precio UF')
